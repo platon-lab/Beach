@@ -22,7 +22,12 @@
     <video id="end-video" class="overlay-media" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:100; background:black;">
         <source src="End.mp4" type="video/mp4">
     </video>
-    <img id="end-img" src="END.png" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:101; object-fit: contain; background:black;">
+    
+    <img id="end-img" src="END.png" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:101; object-fit: contain; background:black; cursor: pointer;">
+
+    <video id="cool-video" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:102; background:black; object-fit: cover;">
+        <source src="Cool.mp4" type="video/mp4">
+    </video>
 
     <script type="module">
         import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js';
@@ -30,12 +35,13 @@
         let scene, camera, renderer, moveForward = false;
         let forestGroup, beachGroup, heroes = [];
         let gameStarted = false;
-        let progress = 0; // Шлях гравця
+        let progress = 0; 
 
         const startBtn = document.getElementById('start-btn');
         const moveBtn = document.getElementById('move-btn');
         const endVideo = document.getElementById('end-video');
         const endImg = document.getElementById('end-img');
+        const coolVideo = document.getElementById('cool-video');
 
         startBtn.addEventListener('click', () => {
             document.documentElement.requestFullscreen();
@@ -45,6 +51,18 @@
             init();
         });
 
+        // Логіка для переходу після кліку на фото
+        endImg.addEventListener('click', () => {
+            endImg.style.display = 'none';
+            coolVideo.style.display = 'block';
+            coolVideo.play();
+        });
+
+        // Перехід на сайт після завершення Cool.mp4
+        coolVideo.onended = () => {
+            window.location.href = "https://platon-lab.github.io/LAST-CHANCE/";
+        };
+
         moveBtn.addEventListener('mousedown', () => moveForward = true);
         moveBtn.addEventListener('mouseup', () => moveForward = false);
         moveBtn.addEventListener('touchstart', () => moveForward = true);
@@ -52,7 +70,7 @@
 
         function init() {
             scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x441100, 0.05); // Червоний туман пожежі
+            scene.fog = new THREE.FogExp2(0x441100, 0.05); 
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.position.set(0, 1.6, 5);
@@ -61,12 +79,10 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            // Світло від вогню
             const light = new THREE.PointLight(0xff4400, 5, 50);
             camera.add(light);
             scene.add(camera);
 
-            // --- СТВОРЕННЯ ЛІСУ ---
             forestGroup = new THREE.Group();
             const treeGeo = new THREE.CylinderGeometry(0.2, 0.4, 5);
             const treeMat = new THREE.MeshBasicMaterial({ color: 0x110500 });
@@ -77,7 +93,6 @@
             }
             scene.add(forestGroup);
 
-            // --- СТВОРЕННЯ ПЛЯЖУ ---
             beachGroup = new THREE.Group();
             beachGroup.position.z = -110; 
             
@@ -94,7 +109,6 @@
             water.position.set(0, 0.1, -40);
             beachGroup.add(water);
 
-            // --- ГЕРОЇ ---
             const heroFiles = ['Junior.png', 'Fil.png', 'Milka.png', 'Bark.png'];
             heroFiles.forEach((file, i) => {
                 const loader = new THREE.TextureLoader();
@@ -118,17 +132,14 @@
 
             if (moveForward) {
                 camera.position.z -= 0.15;
-                // Хитання камери при ходьбі
                 camera.position.y = 1.6 + Math.sin(camera.position.z * 5) * 0.05;
             }
 
-            // Зміна туману: коли виходимо з лісу до моря
             if (camera.position.z < -80) {
-                scene.fog.color.setHex(0x87ceeb); // Небо стає блакитним
+                scene.fog.color.setHex(0x87ceeb); 
                 scene.fog.density = 0.01;
             }
 
-            // Перевірка наближення до героїв
             if (camera.position.z < -120) {
                 triggerEnd();
                 gameStarted = false;
